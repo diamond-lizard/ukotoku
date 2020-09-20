@@ -258,14 +258,12 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
             x, y = ukotoku_guess_image_resolution(number_of_elements_in_wav)
         elif (type(x) == type(3)) and (type(y) == type(3)):
             if x * y < unpadded_wav_data_1d.size:
-                print(f"Error: x * y resolution must be at least {unpadded_wav_data_1d.size}")
-                exit(1)
+                ukotoku_exiterr(f"Error: x * y resolution must be at least {unpadded_wav_data_1d.size}")
             else:
                 pass
         else:
             # This should never happen
-            print("Error: Unexpected x and y image resolution types.")
-            exit(1)
+            ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
         if x * y == unpadded_wav_data_1d.size:
             # No padding is necessary
@@ -289,8 +287,7 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
 
         imageio.imwrite(output_file, padded_wav_data_2d)
     else:
-        print("Error: Unexpected WAV data format")
-        exit(1)
+        ukotoku_exiterr("Error: Unexpected WAV data format")
 
 
 if __name__ == '__main__':
