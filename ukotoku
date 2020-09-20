@@ -57,8 +57,10 @@ import os
 @click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the WAV.")
 def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
     input_file_type = ukotoku_get_input_file_type(input_file)
+    output_file_type = ukotoku_get_output_file_type(output_file)
     if input_file_type == 'wav':
-        ukotoku_wav2tiff(input_file, output_file, resolution)
+        if output_file_type == 'tiff':
+            ukotoku_wav2tiff(input_file, output_file, resolution)
     elif input_file_type == 'tiff':
         ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
     else:
@@ -86,6 +88,35 @@ def ukotoku_get_image_size_from_user(resolution):
         else:
             ukotoku_exiterr("resolution must be in the form WIDTHxHEIGHT or 'guess'")
     return (x, y)
+
+
+def ukotoku_get_output_file_type(output_file):
+    # Make sure the output file type is allowed
+    match = re.search('\.([^.]+)$', output_file)
+    if match:
+        output_file_extension = match.group(1)
+    else:
+        ukotoku_exiterr("The OUTPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        return 'wav'
+    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        return 'tiff'
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "OUTPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        ukotoku_exiterr(message)
+
 
 
 def ukotoku_get_raw_wav(input_file):
