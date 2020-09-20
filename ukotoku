@@ -113,15 +113,9 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
     if output_file_exists:
         ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
     tiff_data = imageio.imread(input_file)
-    #print(tiff_data.meta)
 
-    #tiff_data[:,[0, 1]] = tiff_data[:,[1, 0]]
-    #print(tiff_data.shape)
     # Change the image array from 2D to 1D
     tiff_data = tiff_data.reshape(tiff_data.size,order='C')
-    #tiff_data.flatten(order='C')
-
-    #print(tiff_data.size)
 
     wav_output_file = wave.open(output_file, 'w')
     wav_output_file.setnchannels(channels)
