@@ -21,7 +21,7 @@ pip3 install --user numpy
 #+END_SRC
 *** Clone this git repo
 #+BEGIN_SRC sh
-git clone https://github.com/diamond-lizard/ukotoku/ukotoku.git
+git clone https://github.com/diamond-lizard/ukotoku.git
 #+END_SRC
 ** Use
 #+BEGIN_SRC sh
