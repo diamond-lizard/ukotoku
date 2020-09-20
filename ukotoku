@@ -155,15 +155,7 @@ def ukotoku_tiff2wav_validate_output_file(output_file):
 
 def ukotoku_wav2tiff(input_file, output_file, resolution):
     ukotoku_wav2tiff_validate_output_file(output_file)
-
-    # Make sure the user specified a resolution or 'guess'
-    try:
-        resolution
-    except NameError:
-        ukotoku_exiterr("You must specify a resolution or 'guess'")
-
-    if (resolution == '') or (resolution == None):
-        ukotoku_exiterr("You must specify a resolution or 'guess'")
+    ukotoku_wav2tiff_validate_resolution(resolution)
 
     x, y = ukotoku_get_image_size_from_user(resolution)
 
@@ -273,6 +265,17 @@ def ukotoku_wav2tiff_validate_output_file(output_file):
     output_file_exists = os.path.isfile(output_file)
     if output_file_exists:
         ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
+
+
+def ukotoku_wav2tiff_validate_resolution(resolution):
+    # Make sure the user specified a resolution or 'guess'
+    try:
+        resolution
+    except NameError:
+        ukotoku_exiterr("You must specify a resolution or 'guess'")
+
+    if (resolution == '') or (resolution == None):
+        ukotoku_exiterr("You must specify a resolution or 'guess'")
 
 
 def ukotoku_get_input_file_type(input_file):
