@@ -30,7 +30,7 @@ ukotoku OPTIONS INPUT OUTPUT
 *** INPUT
 The name of the file you want to convert from.
 *** OUTPUT
-The name of the file that you want INPUT to be converted to.  If the file already exists it will be automatically overwritten.
+The name of the file that you want INPUT to be converted to.
 *** Required options for audio output
 **** For the WAV format:
 ***** --channels  INTEGER
