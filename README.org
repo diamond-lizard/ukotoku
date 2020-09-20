@@ -74,6 +74,7 @@ This script was only tested with Python 3.6 on amd64 Gentoo Linux
 Report bugs here:  https://github.com/diamond-lizard/ukotoku/issues
 ** Alternatives
 *** [[https://github.com/hackerfriendly/wav2tiff][hackerfriendly/wav2tiff]]
+*** [[https://github.com/niland/wav2image][niland/wav2image]]
 ** LICENSE
 Copyright (C) 2020 - Sergey Goldgaber
 
