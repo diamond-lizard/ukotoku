@@ -108,9 +108,9 @@ def ukotoku_get_output_file_type(output_file):
         ]
 
     if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
-        return 'wav'
+        return output_file_extension.lower()
     elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
-        return 'tiff'
+        return output_file_extension.lower()
     else:
         valid_audio_extensions = ', '.join(valid_audio_extensions)
         valid_image_extensions = ', '.join(valid_image_extensions)
