@@ -48,13 +48,6 @@ from pathlib import Path
 import os
 
 
-# Print an error message to STDERR
-def printerr(message):
-    this_script = Path(__file__)
-    message = f'{this_script}: Error: {message}'
-    click.echo(message=message, err=True)
-
-
 @click.command()
 @click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
 @click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
@@ -90,7 +83,7 @@ def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
 
 # Exit after printing an error message to STDERR
 def ukotoku_exiterr(message):
-    printerr(message)
+    ukotoku_printerr(message)
     exit(1)
 
 
@@ -120,6 +113,13 @@ def ukotoku_guess_image_resolution(number_of_elements_in_wav):
     x = math.ceil(math.sqrt(number_of_elements_in_wav))
     y = x
     return (x,y)
+
+
+# Print an error message to STDERR
+def ukotoku_printerr(message):
+    this_script = Path(__file__)
+    message = f'{this_script}: Error: {message}'
+    click.echo(message=message, err=True)
 
 
 def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
