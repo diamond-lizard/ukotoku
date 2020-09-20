@@ -56,30 +56,13 @@ import os
 @click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the WAV.")
 @click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the WAV.")
 def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
-    match = re.search('\.([^.]+)$', input_file)
-    if match:
-        input_file_extension = match.group(1)
-    else:
-        ukotoku_exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
-
-    valid_audio_extensions = [
-        'wav',
-        ]
-
-    valid_image_extensions = [
-        'tiff',
-        ]
-
-    if   input_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+    input_file_type == ukotoku_get_input_file_type(input_file)
+    if input_file_type == 'wav':
         ukotoku_wav2tiff(input_file, output_file, resolution)
-    elif input_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+    elif input_file_type == 'tiff':
         ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
     else:
-        valid_audio_extensions = ', '.join(valid_audio_extensions)
-        valid_image_extensions = ', '.join(valid_image_extensions)
-        message = "INPUT file extension must be one of: "
-        message = message + valid_audio_extensions + valid_image_extensions
-        ukotoku_exiterr(message)
+        ukotoku_exiterr("Unexpected INPUT file type.")
 
 # Exit after printing an error message to STDERR
 def ukotoku_exiterr(message):
@@ -288,6 +271,35 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
         imageio.imwrite(output_file, padded_wav_data_2d)
     else:
         ukotoku_exiterr("Error: Unexpected WAV data format")
+
+
+def ukotoku_get_input_file_type(input_file):
+    # Make sure the input file type is allowed
+    match = re.search('\.([^.]+)$', input_file)
+    if match:
+        input_file_extension = match.group(1)
+    else:
+        ukotoku_exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   input_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        return 'wav'
+    elif input_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        return 'tiff'
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "INPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        ukotoku_exiterr(message)
+
 
 
 if __name__ == '__main__':
