@@ -28,7 +28,7 @@ git clone https://github.com/diamond-lizard/ukotoku.git
 ukotoku OPTIONS INPUT OUTPUT
 #+END_SRC
 *** INPUT
-The name of the file you want to convert.
+The name of the file you want to convert from.
 *** OUTPUT
 The name of the file that you want INPUT to be converted to.  If the file already exists it will be automatically overwritten.
 *** Required options for audio output
