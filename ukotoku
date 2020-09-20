@@ -47,11 +47,6 @@ from pathlib import Path
 # To check if a file exists with os.path.isfile()
 import os
 
-# Exit after printing an error message to STDERR
-def exiterr(message):
-    printerr(message)
-    exit(1)
-
 
 # Print an error message to STDERR
 def printerr(message):
@@ -72,7 +67,7 @@ def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
     if match:
         input_file_extension = match.group(1)
     else:
-        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+        ukotoku_exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
 
     valid_audio_extensions = [
         'wav',
@@ -91,7 +86,12 @@ def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
         valid_image_extensions = ', '.join(valid_image_extensions)
         message = "INPUT file extension must be one of: "
         message = message + valid_audio_extensions + valid_image_extensions
-        exiterr(message)
+        ukotoku_exiterr(message)
+
+# Exit after printing an error message to STDERR
+def ukotoku_exiterr(message):
+    printerr(message)
+    exit(1)
 
 
 # Expect image resolution in the form WIDTHxHEIGHT or 'guess'
@@ -128,7 +128,7 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
     if match:
         output_file_extension = match.group(1)
     else:
-        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+        ukotoku_exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
 
     valid_audio_extensions = [
         'wav',
@@ -147,12 +147,12 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
         valid_image_extensions = ', '.join(valid_image_extensions)
         message = "OUTPUT file extension must be one of: "
         message = message + valid_audio_extensions + valid_image_extensions
-        exiterr(message)
+        ukotoku_exiterr(message)
 
     # Make sure OUTPUT does not exist
     output_file_exists = os.path.isfile(output_file)
     if output_file_exists:
-        exiterr(f"OUTPUT file '{output_file}' already exists.")
+        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
     tiff_data = imageio.imread(input_file)
     print(tiff_data.meta)
 
@@ -177,17 +177,17 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
     try:
         output_file
     except NameError:
-        exiterr("You must specify an OUTPUT file")
+        ukotoku_exiterr("You must specify an OUTPUT file")
 
     if output_file == '':
-        exiterr("You must specify an OUTPUT file")
+        ukotoku_exiterr("You must specify an OUTPUT file")
 
     # Make sure the OUTPUT filename has a valid extension
     match = re.search('\.([^.]+)$', input_file)
     if match:
         output_file_extension = match.group(1)
     else:
-        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+        ukotoku_exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
 
     valid_audio_extensions = [
         'wav',
@@ -206,21 +206,21 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
         valid_image_extensions = ', '.join(valid_image_extensions)
         message = "OUTPUT file extension must be one of: "
         message = message + valid_audio_extensions + valid_image_extensions
-        exiterr(message)
+        ukotoku_exiterr(message)
 
     # Make sure OUTPUT does not exist
     output_file_exists = os.path.isfile(output_file)
     if output_file_exists:
-        exiterr(f"OUTPUT file '{output_file}' already exists.")
+        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
 
     # Make sure the user specified a resolution or 'guess'
     try:
         resolution
     except NameError:
-        exiterr("You must specify a resolution or 'guess'")
+        ukotoku_exiterr("You must specify a resolution or 'guess'")
 
     if (resolution == '') or (resolution == None):
-        exiterr("You must specify a resolution or 'guess'")
+        ukotoku_exiterr("You must specify a resolution or 'guess'")
 
     x, y = ukotoku_get_image_size_from_user(resolution)
 
