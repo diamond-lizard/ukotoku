@@ -1,0 +1,64 @@
+* ukotoku
+Convert files from audio formats to image formats and back.
+** Supported formats
+*** Image formats
+**** [[https://en.wikipedia.org/wiki/TIFF][TIFF]]
+*** Audio formats
+**** [[https://en.wikipedia.org/wiki/WAV][WAV]]
+** Requirements
+*** Python
+This script has only been tested with Python 3.6
+*** Python modules
+**** [[https://pypi.org/project/click/][click]]
+**** [[https://imageio.github.io][imageio]]
+**** [[https://numpy.org/][numpy]]
+** Installation
+** Use
+ukotoku OPTIONS INPUT OUTPUT
+*** Required options for audio output
+**** WAV format
+***** --channels  INTEGER
+The number of channels the WAV file is to have (ex: "1" for mono, "2" for stereo, etc)
+***** --sampwidth INTEGER
+The sample width the WAV file is to have (ex: "2")
+****** NOTE: You should use a sample width of "1" for 8-bit WAVs, "2" for 16-bit WAVs, etc
+****** NOTE: You should use a sample width of at least 2 (16-bit) if you wish to ensure that all the data in the TIFF is preserved in the WAV.
+***** --samprate  INTEGER
+The sample rate the WAV file is to have (ex: "44100")
+*** Required options for image output
+**** --dimensions WIDTH,HEIGHT or 'guess'
+x and y image dimensions
+** FAQ
+*** I converted from an image to an audio file and back (or vice versa) but the result isn't exactly like the original.
+To ensure that a bidirectional conversion is lossless you have to:
+**** Use lossless file formats (like WAV and TIFF).
+**** Have enough bit-depth to fit the data without clipping (ie. exceeding the limits of the format, aka "clipping")
+**** Use the same settings on the return conversion as the original had
+**** For example, if you wanted to convert a grayscale 1024x768 image to audio and back without loss of information:
+***** The original image should be saved in a lossless image format like TIFF
+***** The original image should have at a bit depth of at least 16-bits
+***** When converting from image to audio, ukotoku should be told to convert it to a lossless audio format like WAV of at least 16-bits
+***** When converting back from audio to image, ukotoku should be told to convert it to an image of the same resolution as the original
+*** Why did you call it ukotoku instead of a more reasonable name like wav2tiff, image2audio, audio2image, or tiff2wav?
+They're all taken, more limiting, and not as fun or memorable.
+** Testing:
+This script was only tested with Python 3.6 on amd64 Gentoo Linux
+** Bug reports
+Report bugs here:  https://github.com/diamond-lizard/ukotoku/issues
+** Alternatives
+*** [[https://github.com/hackerfriendly/wav2tiff][hackerfriendly/wav2tiff]]
+** LICENSE
+Copyright (C) 2020 - Sergey Goldgaber
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

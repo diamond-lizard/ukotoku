@@ -1,0 +1,176 @@
+#!/usr/bin/python3.6
+#
+# Convert files from audio formats to image formats and back.
+#
+#
+##############################################################################
+#
+# Copyright (C) 2020 - Sergey Goldgaber
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+
+# For command line argument processing:
+import click
+
+# For writing TIFF images:
+import imageio
+
+# For reading WAV files:
+import wave
+
+# For converting 1-dimensional WAV data to 2-dimensional numpy arrays
+# Note: 2-dimensional numpy arrays are the only kind imageio will accept
+import numpy
+
+# For the ceil function
+import math
+
+# Regexes
+import re
+
+
+@click.command()
+@click.argument('input_file', nargs=1, required=True, metavar='INPUT.wav')
+@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT.tiff')
+@click.option("--resolution",  required=True, type=click.STRING, metavar="WIDTHxHEIGHT or 'guess'", help="x and y image resolution")
+def ukotoku_wav2tiff(input_file, output_file, resolution):
+    x, y = ukotoku_get_image_size_from_user(resolution)
+
+    # Read file to get buffer
+    ifile   = wave.open(input_file)
+    samples = ifile.getnframes()
+    raw_wav = ifile.readframes(samples)
+
+    # Convert raw WAV to a one-dimensional, 16-bit numpy array
+    unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.int16)
+    source_shape = unpadded_wav_data_1d.shape
+    if len(source_shape) == 1:
+        number_of_elements_in_wav = unpadded_wav_data_1d.size
+        # As imageio.imwrite requires a 2D array, we have to convert the
+        # one-dimensional unpadded_wav_data_1d array to 2D, but some 1D arrays
+        # may not fit exactly in to a 2D array without leaving some
+        # unfilled elements at the end.
+        #
+        # So running np.reshape() directly on the 1D array won't always work,
+        # as reshape() requires the source and destination sizes must always
+        # be the same, which they won't be if the source is smaller than
+        # the destination (as some 1D arrays would necessarily have to be
+        # in order to fit in to 2D).
+        #
+        # The solution is to first pad the 1D array with NANs to make
+        # it fit exactly in to 2D, then reshape.
+        #
+        # Fortunately, the TIFF format has no problem with NANs, and
+        # will "do the right thing" with them.  The GIMP image editor
+        # also has no problem reading, editing, and writing TIFFs with NANs.
+
+        # First we figure out the resolution that we need to make
+        # the 2D array:
+        if (x == 'guess') and (y == 'guess'):
+            x, y = ukotoku_guess_image_resolution(number_of_elements_in_wav)
+        elif (type(x) == type(3)) and (type(y) == type(3)):
+            if x * y < unpadded_wav_data_1d.size:
+                print(f"Error: x * y resolution must be at least {unpadded_wav_data_1d.size}")
+                exit(1)
+            else:
+                pass
+        else:
+            # This should never happen
+            print("Error: Unexpected x and y image resolution types.")
+            exit(1)
+
+        if x * y == unpadded_wav_data_1d.size:
+            # No padding is necessary
+            padded_wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (y,x), order='C')
+        else:
+            # Padding is necessary
+
+            # Figure out how much to pad the source array to the right
+            # to make it fit the destination array shape exactly
+            right_padding_len = numpy.prod((x,y)) - numpy.prod(source_shape)
+
+            # We now have enough information to pad
+            pad_width = (0,right_padding_len)
+            padded_wav_data_1d = numpy.pad(unpadded_wav_data_1d,
+                                           pad_width,
+                                           mode='constant',
+                                           constant_values=(numpy.nan,))
+
+            # Now that we've padded, we can reshape without fear
+            padded_wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x), order='C')
+
+        imageio.imwrite(output_file, padded_wav_data_2d)
+    else:
+        print("Error: Unexpected WAV data format")
+        exit(1)
+
+
+@click.command()
+@click.argument('input_file',  nargs=1, required=True, metavar='INPUT.tiff')
+@click.argument('output_file', nargs=1, required=True, type=click.Path(exists=False), metavar='OUTPUT.wav')
+@click.option("--channels",  required=True, type=click.INT, help="Number of channels for the WAV.")
+@click.option("--sampwidth", required=True, type=click.INT, help="Sample width for the WAV.")
+@click.option("--samprate",  required=True, type=click.INT, help="Sample rate for the WAV.")
+def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
+    tiff_data = imageio.imread(input_file)
+    print(tiff_data.meta)
+
+    #tiff_data[:,[0, 1]] = tiff_data[:,[1, 0]]
+    print(tiff_data.shape)
+    # Change the image array from 2D to 1D
+    tiff_data = tiff_data.reshape(tiff_data.size,order='C')
+    #tiff_data.flatten(order='C')
+
+    print(tiff_data.size)
+
+    wav_output_file = wave.open(output_file, 'w')
+    wav_output_file.setnchannels(channels)
+    wav_output_file.setsampwidth(sampwidth)
+    wav_output_file.setframerate(samprate)
+
+    wav_output_file.writeframesraw(tiff_data)
+
+
+# Decide on image resolution.
+#
+# We could choose anything, but have decided on a square
+# that should fit at least as many elements as are contained in the
+# one-dimensional WAV array
+def ukotoku_guess_image_resolution(number_of_elements_in_wav):
+    # We do the following to make the minimum sized square that will
+    # fit the data:
+    x = math.ceil(math.sqrt(number_of_elements_in_wav))
+    y = x
+    return (x,y)
+
+
+# Expect image resolution in the form WIDTHxHEIGHT or 'guess'
+def ukotoku_get_image_size_from_user(resolution):
+    if resolution == 'guess':
+        x = 'guess'
+        y = 'guess'
+    else:
+        match = re.search('^(\d+)x(\d+)$', resolution)
+        if match:
+            x = int(match.group(1))
+            y = int(match.group(2))
+        else:
+            print("Error: resolution must be in the form WIDTHxHEIGHT or 'guess'")
+    return (x, y)
+
+
+if __name__ == '__main__':
+    ukotoku()
