@@ -94,6 +94,84 @@ def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
         exiterr(message)
 
 
+# Expect image resolution in the form WIDTHxHEIGHT or 'guess'
+def ukotoku_get_image_size_from_user(resolution):
+    if resolution == 'guess':
+        x = 'guess'
+        y = 'guess'
+    else:
+        match = re.search('^(\d+)x(\d+)$', resolution)
+        if match:
+            x = int(match.group(1))
+            y = int(match.group(2))
+        else:
+            print("Error: resolution must be in the form WIDTHxHEIGHT or 'guess'")
+    return (x, y)
+
+
+# Decide on image resolution.
+#
+# We could choose anything, but have decided on a square
+# that should fit at least as many elements as are contained in the
+# one-dimensional WAV array
+def ukotoku_guess_image_resolution(number_of_elements_in_wav):
+    # We do the following to make the minimum sized square that will
+    # fit the data:
+    x = math.ceil(math.sqrt(number_of_elements_in_wav))
+    y = x
+    return (x,y)
+
+
+def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
+    # Make sure the OUTPUT filename has a valid extension
+    match = re.search('\.([^.]+)$', input_file)
+    if match:
+        output_file_extension = match.group(1)
+    else:
+        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        pass
+    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        pass
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "OUTPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        exiterr(message)
+
+    # Make sure OUTPUT does not exist
+    output_file_exists = os.path.isfile(output_file)
+    if output_file_exists:
+        exiterr(f"OUTPUT file '{output_file}' already exists.")
+    tiff_data = imageio.imread(input_file)
+    print(tiff_data.meta)
+
+    #tiff_data[:,[0, 1]] = tiff_data[:,[1, 0]]
+    print(tiff_data.shape)
+    # Change the image array from 2D to 1D
+    tiff_data = tiff_data.reshape(tiff_data.size,order='C')
+    #tiff_data.flatten(order='C')
+
+    print(tiff_data.size)
+
+    wav_output_file = wave.open(output_file, 'w')
+    wav_output_file.setnchannels(channels)
+    wav_output_file.setsampwidth(sampwidth)
+    wav_output_file.setframerate(samprate)
+
+    wav_output_file.writeframesraw(tiff_data)
+
+
 def ukotoku_wav2tiff(input_file, output_file, resolution):
     # Make sure the user specified an OUTPUT filename
     try:
@@ -213,84 +291,6 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
     else:
         print("Error: Unexpected WAV data format")
         exit(1)
-
-
-def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
-    # Make sure the OUTPUT filename has a valid extension
-    match = re.search('\.([^.]+)$', input_file)
-    if match:
-        output_file_extension = match.group(1)
-    else:
-        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
-
-    valid_audio_extensions = [
-        'wav',
-        ]
-
-    valid_image_extensions = [
-        'tiff',
-        ]
-
-    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
-        pass
-    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
-        pass
-    else:
-        valid_audio_extensions = ', '.join(valid_audio_extensions)
-        valid_image_extensions = ', '.join(valid_image_extensions)
-        message = "OUTPUT file extension must be one of: "
-        message = message + valid_audio_extensions + valid_image_extensions
-        exiterr(message)
-
-    # Make sure OUTPUT does not exist
-    output_file_exists = os.path.isfile(output_file)
-    if output_file_exists:
-        exiterr(f"OUTPUT file '{output_file}' already exists.")
-    tiff_data = imageio.imread(input_file)
-    print(tiff_data.meta)
-
-    #tiff_data[:,[0, 1]] = tiff_data[:,[1, 0]]
-    print(tiff_data.shape)
-    # Change the image array from 2D to 1D
-    tiff_data = tiff_data.reshape(tiff_data.size,order='C')
-    #tiff_data.flatten(order='C')
-
-    print(tiff_data.size)
-
-    wav_output_file = wave.open(output_file, 'w')
-    wav_output_file.setnchannels(channels)
-    wav_output_file.setsampwidth(sampwidth)
-    wav_output_file.setframerate(samprate)
-
-    wav_output_file.writeframesraw(tiff_data)
-
-
-# Decide on image resolution.
-#
-# We could choose anything, but have decided on a square
-# that should fit at least as many elements as are contained in the
-# one-dimensional WAV array
-def ukotoku_guess_image_resolution(number_of_elements_in_wav):
-    # We do the following to make the minimum sized square that will
-    # fit the data:
-    x = math.ceil(math.sqrt(number_of_elements_in_wav))
-    y = x
-    return (x,y)
-
-
-# Expect image resolution in the form WIDTHxHEIGHT or 'guess'
-def ukotoku_get_image_size_from_user(resolution):
-    if resolution == 'guess':
-        x = 'guess'
-        y = 'guess'
-    else:
-        match = re.search('^(\d+)x(\d+)$', resolution)
-        if match:
-            x = int(match.group(1))
-            y = int(match.group(2))
-        else:
-            print("Error: resolution must be in the form WIDTHxHEIGHT or 'guess'")
-    return (x, y)
 
 
 if __name__ == '__main__':
