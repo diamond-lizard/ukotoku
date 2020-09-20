@@ -56,7 +56,7 @@ import os
 @click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the WAV.")
 @click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the WAV.")
 def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
-    input_file_type == ukotoku_get_input_file_type(input_file)
+    input_file_type = ukotoku_get_input_file_type(input_file)
     if input_file_type == 'wav':
         ukotoku_wav2tiff(input_file, output_file, resolution)
     elif input_file_type == 'tiff':
