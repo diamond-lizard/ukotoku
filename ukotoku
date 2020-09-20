@@ -166,7 +166,7 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
         ukotoku_exiterr("You must specify an OUTPUT file")
 
     # Make sure the OUTPUT filename has a valid extension
-    match = re.search('\.([^.]+)$', input_file)
+    match = re.search('\.([^.]+)$', output_file)
     if match:
         output_file_extension = match.group(1)
     else:
