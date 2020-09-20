@@ -105,7 +105,7 @@ def ukotoku_get_image_size_from_user(resolution):
             x = int(match.group(1))
             y = int(match.group(2))
         else:
-            print("Error: resolution must be in the form WIDTHxHEIGHT or 'guess'")
+            ukotoku_exiterr("resolution must be in the form WIDTHxHEIGHT or 'guess'")
     return (x, y)
 
 
