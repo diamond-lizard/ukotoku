@@ -64,6 +64,7 @@ def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
     else:
         ukotoku_exiterr("Unexpected INPUT file type.")
 
+
 # Exit after printing an error message to STDERR
 def ukotoku_exiterr(message):
     ukotoku_printerr(message)
