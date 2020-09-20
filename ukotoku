@@ -156,11 +156,6 @@ def ukotoku_tiff2wav_validate_output_file(output_file):
 def ukotoku_wav2tiff(input_file, output_file, resolution):
     ukotoku_wav2tiff_validate_output_file(output_file)
 
-    # Make sure OUTPUT does not exist
-    output_file_exists = os.path.isfile(output_file)
-    if output_file_exists:
-        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
-
     # Make sure the user specified a resolution or 'guess'
     try:
         resolution
@@ -273,6 +268,11 @@ def ukotoku_wav2tiff_validate_output_file(output_file):
         message = "OUTPUT file extension must be one of: "
         message = message + valid_audio_extensions + valid_image_extensions
         ukotoku_exiterr(message)
+
+    # Make sure OUTPUT does not exist
+    output_file_exists = os.path.isfile(output_file)
+    if output_file_exists:
+        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
 
 
 def ukotoku_get_input_file_type(input_file):
