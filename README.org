@@ -14,19 +14,19 @@ This script has only been tested with Python 3.6
 **** [[https://numpy.org/][numpy]]
 ** Installation
 *** Install the Python modules listed above
-```
+#+BEGIN_SRC sh
 pip3 install --user click
 pip3 install --user imageio
 pip3 install --user numpy
-```
+#+END_SRC
 *** Clone this git repo
-```
+#+BEGIN_SRC sh
 git clone https://github.com/diamond-lizard/ukotoku/ukotoku.git
-```
+#+END_SRC
 ** Use
-```
+#+BEGIN_SRC sh
 ukotoku OPTIONS INPUT OUTPUT
-```
+#+END_SRC
 *** INPUT
 The name of the file you want to convert.
 *** OUTPUT
