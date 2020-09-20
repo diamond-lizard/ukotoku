@@ -87,6 +87,14 @@ def ukotoku_get_image_size_from_user(resolution):
     return (x, y)
 
 
+def ukotoku_get_raw_wav(input_file):
+    # Read file to get buffer
+    ifile   = wave.open(input_file)
+    samples = ifile.getnframes()
+    raw_wav = ifile.readframes(samples)
+    return raw_wav
+
+
 # Decide on image resolution.
 #
 # We could choose anything, but have decided on a square
@@ -160,10 +168,7 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
 
     x, y = ukotoku_get_image_size_from_user(resolution)
 
-    # Read file to get buffer
-    ifile   = wave.open(input_file)
-    samples = ifile.getnframes()
-    raw_wav = ifile.readframes(samples)
+    raw_wav = ukotoku_get_raw_wav(input_file)
 
     # Convert raw WAV to a one-dimensional, 16-bit numpy array
     unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.int16)
