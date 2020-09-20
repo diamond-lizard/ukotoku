@@ -72,6 +72,8 @@ def ukotoku_exiterr(message):
 
 # Expect image resolution in the form WIDTHxHEIGHT or 'guess'
 def ukotoku_get_image_size_from_user(resolution):
+    ukotoku_wav2tiff_validate_resolution(resolution)
+
     if resolution == 'guess':
         x = 'guess'
         y = 'guess'
@@ -155,7 +157,6 @@ def ukotoku_tiff2wav_validate_output_file(output_file):
 
 def ukotoku_wav2tiff(input_file, output_file, resolution):
     ukotoku_wav2tiff_validate_output_file(output_file)
-    ukotoku_wav2tiff_validate_resolution(resolution)
 
     x, y = ukotoku_get_image_size_from_user(resolution)
 
