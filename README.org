@@ -44,6 +44,17 @@ The sample rate the WAV file is to have (ex: "44100")
 *** Required options for image output
 **** --dimensions WIDTH,HEIGHT or 'guess'
 x and y image dimensions
+** Examples
+*** Convert from a TIFF file to a WAV file
+*Note: The resulting WAV file will be in mono, 16-bit bit depth, and 22050 sample rate.*
+#+BEGIN_SRC sh
+ukotoku --channels 1 --sampwidth 2 --samprate 22050 INPUT.tiff OUTPUT.wav
+#+END_SRC
+*** Convert from a WAV file to a TIFF file
+*Note: The resulting TIFF file will be 163 pixels wide by 163 pixels high.*
+#+BEGIN_SRC sh
+ukotoku --resolution 163x163 INPUT.tiff OUTPUT.wav
+#+END_SRC
 ** FAQ
 *** I converted from an image to an audio file and back (or vice versa) but the result isn't exactly like the original.
 To ensure that a bidirectional conversion is lossless you have to:
