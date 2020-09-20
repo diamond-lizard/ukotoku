@@ -13,6 +13,16 @@ This script has only been tested with Python 3.6
 **** [[https://imageio.github.io][imageio]]
 **** [[https://numpy.org/][numpy]]
 ** Installation
+*** Install the Python modules listed above
+```
+pip3 install --user click
+pip3 install --user imageio
+pip3 install --user numpy
+```
+*** Clone this git repo
+```
+git clone https://github.com/diamond-lizard/ukotoku/ukotoku.git
+```
 ** Use
 ukotoku OPTIONS INPUT OUTPUT
 *** Required options for audio output
