@@ -184,6 +184,34 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
         ukotoku_exiterr("Error: Unexpected WAV data format")
 
 
+def ukotoku_wav2tiff_get_wav_data_2d(
+    unpadded_wav_data_1d,
+    x,
+    y,
+    source_shape):
+    if x * y == unpadded_wav_data_1d.size:
+        # No padding is necessary
+        wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (y,x), order='C')
+    else:
+        # Padding is necessary
+
+        # Figure out how much to pad the source array to the right
+        # to make it fit the destination array shape exactly
+        right_padding_len = numpy.prod((x,y)) - numpy.prod(source_shape)
+
+        # We now have enough information to pad
+        pad_width = (0,right_padding_len)
+        padded_wav_data_1d = numpy.pad(unpadded_wav_data_1d,
+                                        pad_width,
+                                        mode='constant',
+                                        constant_values=(numpy.nan,))
+
+        # Now that we've padded, we can reshape without fear
+        wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x), order='C')
+
+    return wav_data_2d
+
+
 def ukotoku_wav2tiff_pad_and_write(
         output_file,
         unpadded_wav_data_1d,
@@ -223,27 +251,10 @@ def ukotoku_wav2tiff_pad_and_write(
             # This should never happen
             ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
-        if x * y == unpadded_wav_data_1d.size:
-            # No padding is necessary
-            padded_wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (y,x), order='C')
-        else:
-            # Padding is necessary
+        wav_data_2d = ukotoku_wav2tiff_get_wav_data_2d(
+            unpadded_wav_data_1d, x, y, source_shape)
 
-            # Figure out how much to pad the source array to the right
-            # to make it fit the destination array shape exactly
-            right_padding_len = numpy.prod((x,y)) - numpy.prod(source_shape)
-
-            # We now have enough information to pad
-            pad_width = (0,right_padding_len)
-            padded_wav_data_1d = numpy.pad(unpadded_wav_data_1d,
-                                           pad_width,
-                                           mode='constant',
-                                           constant_values=(numpy.nan,))
-
-            # Now that we've padded, we can reshape without fear
-            padded_wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x), order='C')
-
-        imageio.imwrite(output_file, padded_wav_data_2d)
+        imageio.imwrite(output_file, wav_data_2d)
 
 
 def ukotoku_wav2tiff_validate_output_file(output_file):
