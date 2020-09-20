@@ -3,3 +3,5 @@
 *.TIFF
 *.wav
 *.WAV
+!test/input.tiff
+!test/input.wav
