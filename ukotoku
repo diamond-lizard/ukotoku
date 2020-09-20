@@ -176,8 +176,6 @@ def ukotoku_wav2png(input_file, output_file, resolution):
 
 
 def ukotoku_wav2tiff(input_file, output_file, resolution):
-    ukotoku_wav2tiff_validate_output_file(output_file)
-
     x, y = ukotoku_get_image_size_from_user(resolution)
 
     raw_wav = ukotoku_get_raw_wav(input_file)
