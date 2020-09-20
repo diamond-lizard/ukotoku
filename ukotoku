@@ -41,12 +41,109 @@ import math
 # Regexes
 import re
 
+# To find out what the path of this script is
+from pathlib import Path
+
+# To check if a file exists with os.path.isfile()
+import os
+
+# Exit after printing an error message to STDERR
+def exiterr(message):
+    printerr(message)
+    exit(1)
+
+
+# Print an error message to STDERR
+def printerr(message):
+    this_script = Path(__file__)
+    message = f'{this_script}: Error: {message}'
+    click.echo(message=message, err=True)
+
 
 @click.command()
-@click.argument('input_file', nargs=1, required=True, metavar='INPUT.wav')
-@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT.tiff')
-@click.option("--resolution",  required=True, type=click.STRING, metavar="WIDTHxHEIGHT or 'guess'", help="x and y image resolution")
+@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
+@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
+@click.option("--channels",    required=False, type=click.INT,    help="Number of channels for the WAV.")
+@click.option("--resolution",  required=False, type=click.STRING, help="x and y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
+@click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the WAV.")
+@click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the WAV.")
+def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
+    match = re.search('\.([^.]+)$', input_file)
+    if match:
+        input_file_extension = match.group(1)
+    else:
+        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   input_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        ukotoku_wav2tiff(input_file, output_file, resolution)
+    elif input_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "INPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        exiterr(message)
+
+
 def ukotoku_wav2tiff(input_file, output_file, resolution):
+    # Make sure the user specified an OUTPUT filename
+    try:
+        output_file
+    except NameError:
+        exiterr("You must specify an OUTPUT file")
+
+    if output_file == '':
+        exiterr("You must specify an OUTPUT file")
+
+    # Make sure the OUTPUT filename has a valid extension
+    match = re.search('\.([^.]+)$', input_file)
+    if match:
+        output_file_extension = match.group(1)
+    else:
+        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        pass
+    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        pass
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "OUTPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        exiterr(message)
+
+    # Make sure OUTPUT does not exist
+    output_file_exists = os.path.isfile(output_file)
+    if output_file_exists:
+        exiterr(f"OUTPUT file '{output_file}' already exists.")
+
+    # Make sure the user specified a resolution or 'guess'
+    try:
+        resolution
+    except NameError:
+        exiterr("You must specify a resolution or 'guess'")
+
+    if (resolution == '') or (resolution == None):
+        exiterr("You must specify a resolution or 'guess'")
+
     x, y = ukotoku_get_image_size_from_user(resolution)
 
     # Read file to get buffer
@@ -118,13 +215,37 @@ def ukotoku_wav2tiff(input_file, output_file, resolution):
         exit(1)
 
 
-@click.command()
-@click.argument('input_file',  nargs=1, required=True, metavar='INPUT.tiff')
-@click.argument('output_file', nargs=1, required=True, type=click.Path(exists=False), metavar='OUTPUT.wav')
-@click.option("--channels",  required=True, type=click.INT, help="Number of channels for the WAV.")
-@click.option("--sampwidth", required=True, type=click.INT, help="Sample width for the WAV.")
-@click.option("--samprate",  required=True, type=click.INT, help="Sample rate for the WAV.")
 def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
+    # Make sure the OUTPUT filename has a valid extension
+    match = re.search('\.([^.]+)$', input_file)
+    if match:
+        output_file_extension = match.group(1)
+    else:
+        exiterr("The INPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'tiff',
+        ]
+
+    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        pass
+    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        pass
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "OUTPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        exiterr(message)
+
+    # Make sure OUTPUT does not exist
+    output_file_exists = os.path.isfile(output_file)
+    if output_file_exists:
+        exiterr(f"OUTPUT file '{output_file}' already exists.")
     tiff_data = imageio.imread(input_file)
     print(tiff_data.meta)
 

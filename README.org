@@ -24,9 +24,15 @@ pip3 install --user numpy
 git clone https://github.com/diamond-lizard/ukotoku/ukotoku.git
 ```
 ** Use
+```
 ukotoku OPTIONS INPUT OUTPUT
+```
+*** INPUT
+The name of the file you want to convert.
+*** OUTPUT
+The name of the file that you want INPUT to be converted to.  If the file already exists it will be automatically overwritten.
 *** Required options for audio output
-**** WAV format
+**** For the WAV format:
 ***** --channels  INTEGER
 The number of channels the WAV file is to have (ex: "1" for mono, "2" for stereo, etc)
 ***** --sampwidth INTEGER
