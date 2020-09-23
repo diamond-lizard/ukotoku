@@ -87,6 +87,8 @@ def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth,
     elif input_file_type == 'tiff':
         if output_file_type == 'wav':
             ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
+        else:
+            ukotoku_exiterr("Only WAV files are supported as output from TIFF files.")
     else:
         ukotoku_exiterr("Unexpected INPUT file type.")
 
