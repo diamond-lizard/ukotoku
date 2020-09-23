@@ -225,11 +225,13 @@ def ukotoku_audio2image(ctx):
         ukotoku_exiterr("Error: Unexpected WAV data format")
 
 
-def ukotoku_audio2image_get_multidimensional_wav_data(unpadded_wav_data_1d,
-                                      x,
-                                      y,
-                                      channels,
-                                      source_shape):
+@click.pass_context
+def ukotoku_audio2image_get_multidimensional_wav_data(ctx, unpadded_wav_data_1d):
+    channels = ctx.obj['channels']
+    source_shape = ctx.obj['source_shape']
+    x = ctx.obj['x']
+    y = ctx.obj['y']
+
     if x * y == unpadded_wav_data_1d.size:
         # No padding is necessary
         multidimensional_wav_data = numpy.reshape(unpadded_wav_data_1d, (channels, y,x), order='C')
@@ -293,7 +295,7 @@ def ukotoku_audio2image_pad_and_write(ctx, unpadded_wav_data_1d):
         ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
     multidimensional_wav_data = ukotoku_audio2image_get_multidimensional_wav_data(
-        unpadded_wav_data_1d, x, y, channels, ctx.obj['source_shape'])
+        unpadded_wav_data_1d)
 
     #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1)).T
     #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1,channels)).T
