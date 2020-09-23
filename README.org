@@ -2,7 +2,9 @@
 Convert files from audio formats to image formats and back.
 ** Supported formats
 *** Image formats
-**** [[https://en.wikipedia.org/wiki/TIFF][TIFF]]
+**** [[https://en.wikipedia.org/wiki/JPEG][JPEG]] (8-bit unsigned only)
+**** [[https://en.wikipedia.org/wiki/Portable_Network_Graphics][PNG]] (8-bit unsigned only)
+**** [[https://en.wikipedia.org/wiki/TIFF][TIFF]] (8-bit unsigned and 16-bit signed)
 *** Audio formats
 **** [[https://en.wikipedia.org/wiki/WAV][WAV]]
 ** Requirements
