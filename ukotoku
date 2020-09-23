@@ -240,7 +240,7 @@ def ukotoku_audio2image(input_file,
         ukotoku_exiterr("Error: Unexpected WAV data format")
 
 
-def ukotoku_audio2image_get_wav_data_2d(unpadded_wav_data_1d,
+def ukotoku_audio2image_get_multidimensional_wav_data(unpadded_wav_data_1d,
                                       x,
                                       y,
                                       channels,
@@ -310,7 +310,7 @@ def ukotoku_audio2image_pad_and_write(output_file,
         # This should never happen
         ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
-    wav_data_2d = ukotoku_audio2image_get_wav_data_2d(
+    wav_data_2d = ukotoku_audio2image_get_multidimensional_wav_data(
         unpadded_wav_data_1d, x, y, channels, source_shape)
 
     #wav_data_2d = wav_data_2d.reshape((3, -1)).T
