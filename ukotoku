@@ -57,40 +57,33 @@ import os
 @click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the audio file.")
 @click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the audio file.")
 @click.option("--signed/--unsigned", required=False, help="Output image bits signed or unsigned.")
-def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samprate, signed):
+@click.pass_context
+def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth, samprate, signed):
+    ctx.ensure_object(dict)
+    ctx.obj['bits']        = bits
+    ctx.obj['channels']    = channels
+    ctx.obj['input_file']  = input_file
+    ctx.obj['output_file'] = output_file
+    ctx.obj['resolution']  = resolution
+    ctx.obj['samprate']    = samprate
+    ctx.obj['sampwidth']   = sampwidth
+    ctx.obj['signed']      = signed
     input_file_type = ukotoku_get_input_file_type(input_file)
     output_file_type = ukotoku_get_output_file_type(output_file)
+    ctx.obj['output_file_type'] = output_file_type
     if input_file_type == 'wav':
         if output_file_type == 'jpg':
             if (bits == 8) and (signed == False):
-                ukotoku_audio2image(input_file,
-                                    output_file,
-                                    output_file_type,
-                                    bits,
-                                    signed,
-                                    resolution,
-                                    channels)
+                ukotoku_audio2image()
             else:
                 ukotoku_exiterr("Only unsigned 8 bit is supported for JPEG output.")
         elif output_file_type == 'png':
             if (bits == 8) and (signed == False):
-                ukotoku_audio2image(input_file,
-                                    output_file,
-                                    output_file_type,
-                                    bits,
-                                    signed,
-                                    resolution,
-                                    channels)
+                ukotoku_audio2image()
             else:
                 ukotoku_exiterr("Only unsigned 8 bit is supported for PNG output.")
         elif output_file_type == 'tiff':
-            ukotoku_audio2image(input_file,
-                                output_file,
-                                output_file_type,
-                                bits,
-                                signed,
-                                resolution,
-                                channels)
+            ukotoku_audio2image()
     elif input_file_type == 'tiff':
         if output_file_type == 'wav':
             ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
@@ -203,16 +196,13 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
     wav_output_file.writeframesraw(tiff_data)
 
 
-def ukotoku_audio2image(input_file,
-                        output_file,
-                        output_file_type,
-                        bits,
-                        signed,
-                        resolution,
-                        channels):
-    x, y = ukotoku_get_image_size_from_user(resolution)
+@click.pass_context
+def ukotoku_audio2image(ctx):
+    bits   = ctx.obj['bits']
+    signed = ctx.obj['signed']
+    x, y = ukotoku_get_image_size_from_user(ctx.obj['resolution'])
 
-    raw_wav = ukotoku_get_raw_wav(input_file)
+    raw_wav = ukotoku_get_raw_wav(ctx.obj['input_file'])
 
     # Convert raw WAV to a one-dimensional numpy array
     if   (bits ==  8) and (signed == False):
@@ -227,15 +217,10 @@ def ukotoku_audio2image(input_file,
     print(f"unpadded_wav_data_1d.size = {unpadded_wav_data_1d.size}")
     source_shape = unpadded_wav_data_1d.shape
     if len(source_shape) == 1:
-        ukotoku_audio2image_pad_and_write(
-            output_file,
-            output_file_type,
-            unpadded_wav_data_1d,
-            source_shape,
-            x,
-            y,
-            channels,
-        )
+        ctx.obj['x']                = x
+        ctx.obj['y']                = y
+        ctx.obj['source_shape']     = source_shape
+        ukotoku_audio2image_pad_and_write(unpadded_wav_data_1d)
     else:
         ukotoku_exiterr("Error: Unexpected WAV data format")
 
@@ -268,14 +253,11 @@ def ukotoku_audio2image_get_multidimensional_wav_data(unpadded_wav_data_1d,
     return multidimensional_wav_data
 
 
-def ukotoku_audio2image_pad_and_write(output_file,
-                                      output_file_type,
-                                      unpadded_wav_data_1d,
-                                      source_shape,
-                                      x,
-                                      y,
-                                      channels,
-):
+@click.pass_context
+def ukotoku_audio2image_pad_and_write(ctx, unpadded_wav_data_1d):
+    channels = ctx.obj['channels']
+    x = ctx.obj['x']
+    y = ctx.obj['y']
 
     number_of_elements_in_audio = unpadded_wav_data_1d.size
     # As imageio.imwrite requires a multidimensional array, we have to
@@ -311,16 +293,16 @@ def ukotoku_audio2image_pad_and_write(output_file,
         ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
     multidimensional_wav_data = ukotoku_audio2image_get_multidimensional_wav_data(
-        unpadded_wav_data_1d, x, y, channels, source_shape)
+        unpadded_wav_data_1d, x, y, channels, ctx.obj['source_shape'])
 
     #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1)).T
     #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1,channels)).T
     #multidimensional_wav_data = multidimensional_wav_data.reshape((x, -1,channels))
     #imageio.imwrite(output_file, multidimensional_wav_data, format="PNG-PIL")
-    if (output_file_type == 'jpg'):
-        imageio.imwrite(output_file, multidimensional_wav_data, format=None, quality=100)
+    if (ctx.obj['output_file_type'] == 'jpg'):
+        imageio.imwrite(ctx.obj['output_file'], multidimensional_wav_data, format=None, quality=100)
     else:
-        imageio.imwrite(output_file, multidimensional_wav_data)
+        imageio.imwrite(ctx.obj['output_file'], multidimensional_wav_data)
 
 
 def ukotoku_audio2image_validate_resolution(resolution):
