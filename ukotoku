@@ -86,7 +86,7 @@ def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth,
             ukotoku_audio2image()
     elif input_file_type == 'tiff':
         if output_file_type == 'wav':
-            ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
+            ukotoku_image2wav(input_file, output_file, channels, sampwidth, samprate)
         else:
             ukotoku_exiterr("Only WAV files are supported as output from TIFF files.")
     else:
@@ -180,7 +180,7 @@ def ukotoku_printerr(message):
     click.echo(message=message, err=True)
 
 
-def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
+def ukotoku_image2wav(input_file, output_file, channels, sampwidth, samprate):
     # Make sure OUTPUT does not exist
     output_file_exists = os.path.isfile(output_file)
     if output_file_exists:
