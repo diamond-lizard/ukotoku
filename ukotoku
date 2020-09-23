@@ -63,16 +63,31 @@ def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samp
     if input_file_type == 'wav':
         if output_file_type == 'jpg':
             if (bits == 8) and (signed == False):
-                ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
+                ukotoku_audio2image(input_file,
+                                    output_file,
+                                    bits,
+                                    signed,
+                                    resolution,
+                                    channels)
             else:
                 ukotoku_exiterr("Only unsigned 8 bit is supported for JPEG output.")
         elif output_file_type == 'png':
             if (bits == 8) and (signed == False):
-                ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
+                ukotoku_audio2image(input_file,
+                                    output_file,
+                                    bits,
+                                    signed,
+                                    resolution,
+                                    channels)
             else:
                 ukotoku_exiterr("Only unsigned 8 bit is supported for PNG output.")
         elif output_file_type == 'tiff':
-            ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
+            ukotoku_audio2image(input_file,
+                                output_file,
+                                bits,
+                                signed,
+                                resolution,
+                                channels)
     elif input_file_type == 'tiff':
         if output_file_type == 'wav':
             ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
