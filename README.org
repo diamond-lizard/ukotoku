@@ -42,9 +42,15 @@ The sample width the WAV file is to have (ex: "2")
 ***** --samprate  INTEGER
 The sample rate the WAV file is to have (ex: "44100")
 *** Required options for image output
-**** --dimensions WIDTH,HEIGHT or 'guess'
+**** --resolution WIDTH,HEIGHT or 'guess'
 ***** x and y image dimensions
 ***** If you choose 'guess', then ukotoku will try to set the image size to a square equal to or slightly larget than the data will fit in to.
+**** --bits
+***** Bit depth.
+Currently 8 bits is the only supported format for JPEG and PNG output.  8 or 16 bits are supported for TIFF.
+**** --signed or --unsigned
+***** Unsigned bits are all positive, while signed bits can be positive or negative.
+Currently unsigned is the only supported format for JPEG and PNG output.  8 or 16 bits are supported for TIFF.
 ** Examples
 *** Convert from a TIFF file to a WAV file
 *Note: The resulting WAV file will be in mono, 16-bit bit depth, and 22050 sample rate.*

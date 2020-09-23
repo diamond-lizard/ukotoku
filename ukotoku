@@ -51,16 +51,28 @@ import os
 @click.command()
 @click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
 @click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
-@click.option("--channels",    required=False, type=click.INT,    help="Number of channels for the WAV.")
-@click.option("--resolution",  required=False, type=click.STRING, help="x and y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
-@click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the WAV.")
-@click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the WAV.")
-def ukotoku(input_file, output_file, channels, resolution, sampwidth, samprate):
+@click.option("--bits",        required=False, type=click.INT,    help="Output image bit depth.")
+@click.option("--channels",    required=True,  type=click.INT,    help="Number of channels in image or audio file.")
+@click.option("--resolution",  required=False, type=click.STRING, help="x, y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
+@click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the audio file.")
+@click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the audio file.")
+@click.option("--signed/--unsigned", required=False, help="Output image bits signed or unsigned.")
+def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samprate, signed):
     input_file_type = ukotoku_get_input_file_type(input_file)
     output_file_type = ukotoku_get_output_file_type(output_file)
     if input_file_type == 'wav':
-        if output_file_type == 'tiff':
-            ukotoku_wav2tiff(input_file, output_file, resolution)
+        if output_file_type == 'jpg':
+            if (bits == 8) and (signed == False):
+                ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
+            else:
+                ukotoku_exiterr("Only 8 bit, unsigned is supported for JPEG output.")
+        elif output_file_type == 'png':
+            if (bits == 8) and (signed == False):
+                ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
+            else:
+                ukotoku_exiterr("Only 8 bit, unsigned is supported for PNG output.")
+        elif output_file_type == 'tiff':
+            ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels)
     elif input_file_type == 'tiff':
         if output_file_type == 'wav':
             ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate)
@@ -76,7 +88,7 @@ def ukotoku_exiterr(message):
 
 # Expect image resolution in the form WIDTHxHEIGHT or 'guess'
 def ukotoku_get_image_size_from_user(resolution):
-    ukotoku_wav2tiff_validate_resolution(resolution)
+    ukotoku_audio2image_validate_resolution(resolution)
 
     if resolution == 'guess':
         x = 'guess'
@@ -104,6 +116,8 @@ def ukotoku_get_output_file_type(output_file):
         ]
 
     valid_image_extensions = [
+        'jpg',
+        'png',
         'tiff',
         ]
 
@@ -133,12 +147,17 @@ def ukotoku_get_raw_wav(input_file):
 # We could choose anything, but have decided on a square
 # that should fit at least as many elements as are contained in the
 # one-dimensional WAV array
-def ukotoku_guess_image_resolution(number_of_elements_in_wav):
-    # We do the following to make the minimum sized square that will
-    # fit the data:
-    x = math.ceil(math.sqrt(number_of_elements_in_wav))
-    y = x
-    return (x,y)
+def ukotoku_guess_image_resolution(number_of_elements_in_audio, channels):
+    try:
+        elements_remaining = number_of_elements_in_audio / channels
+    except ZeroDivisionError:
+        ukotoku_exiterr("You must have at least one channel.")
+    else:
+        # We do the following to make the minimum sized square that will
+        # fit the data:
+        x = math.ceil(math.sqrt(elements_remaining))
+        y = x
+        return (x,y)
 
 
 # Print an error message to STDERR
@@ -166,48 +185,50 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
     wav_output_file.writeframesraw(tiff_data)
 
 
-def ukotoku_wav2png(input_file, output_file, resolution):
-
-    raw_wav = ukotoku_get_raw_wav(input_file)
-
-    # Convert raw WAV to a one-dimensional, 16-bit numpy array
-    else:
-        ukotoku_exiterr("Error: Unexpected WAV data format")
-
-
-def ukotoku_wav2tiff(input_file, output_file, resolution):
+def ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels):
     x, y = ukotoku_get_image_size_from_user(resolution)
 
     raw_wav = ukotoku_get_raw_wav(input_file)
 
-    # Convert raw WAV to a one-dimensional, 16-bit numpy array
-    unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.int16)
+    # Convert raw WAV to a one-dimensional numpy array
+    if   (bits ==  8) and (signed == False):
+        unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.uint8)
+    elif (bits == 16) and (signed == True):
+        unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.int16)
+    elif (bits == 16) and (signed == False):
+        unpadded_wav_data_1d = numpy.frombuffer(raw_wav, dtype=numpy.uint16)
+    else:
+        ukotoku_exiterr(f"Unsupported combination of bits ({bits}) and signed ({signed})")
+
+    print(f"unpadded_wav_data_1d.size = {unpadded_wav_data_1d.size}")
     source_shape = unpadded_wav_data_1d.shape
     if len(source_shape) == 1:
-        ukotoku_wav2tiff_pad_and_write(
+        ukotoku_audio2image_pad_and_write(
             output_file,
             unpadded_wav_data_1d,
             source_shape,
             x,
-            y)
+            y,
+            channels,
+        )
     else:
         ukotoku_exiterr("Error: Unexpected WAV data format")
 
 
-def ukotoku_wav2tiff_get_wav_data_2d(
-    unpadded_wav_data_1d,
-    x,
-    y,
-    source_shape):
+def ukotoku_audio2image_get_wav_data_2d(unpadded_wav_data_1d,
+                                      x,
+                                      y,
+                                      channels,
+                                      source_shape):
     if x * y == unpadded_wav_data_1d.size:
         # No padding is necessary
-        wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (y,x), order='C')
+        wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (channels, y,x), order='C')
     else:
         # Padding is necessary
 
         # Figure out how much to pad the source array to the right
         # to make it fit the destination array shape exactly
-        right_padding_len = numpy.prod((x,y)) - numpy.prod(source_shape)
+        right_padding_len = numpy.prod((x,y,channels)) - numpy.prod(source_shape)
 
         # We now have enough information to pad
         pad_width = (0,right_padding_len)
@@ -217,57 +238,63 @@ def ukotoku_wav2tiff_get_wav_data_2d(
                                         constant_values=(numpy.nan,))
 
         # Now that we've padded, we can reshape without fear
-        wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x), order='C')
+        wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x,channels), order='C')
 
     return wav_data_2d
 
 
-def ukotoku_wav2tiff_pad_and_write(
-        output_file,
-        unpadded_wav_data_1d,
-        source_shape,
-        x,
-        y):
+def ukotoku_audio2image_pad_and_write(output_file,
+                                      unpadded_wav_data_1d,
+                                      source_shape,
+                                      x,
+                                      y,
+                                      channels,
+):
 
-        number_of_elements_in_wav = unpadded_wav_data_1d.size
-        # As imageio.imwrite requires a 2D array, we have to convert the
-        # one-dimensional unpadded_wav_data_1d array to 2D, but some 1D arrays
-        # may not fit exactly in to a 2D array without leaving some
-        # unfilled elements at the end.
-        #
-        # So running np.reshape() directly on the 1D array won't always work,
-        # as reshape() requires the source and destination sizes must always
-        # be the same, which they won't be if the source is smaller than
-        # the destination (as some 1D arrays would necessarily have to be
-        # in order to fit in to 2D).
-        #
-        # The solution is to first pad the 1D array with NANs to make
-        # it fit exactly in to 2D, then reshape.
-        #
-        # Fortunately, the TIFF format has no problem with NANs, and
-        # will "do the right thing" with them.  The GIMP image editor
-        # also has no problem reading, editing, and writing TIFFs with NANs.
+    number_of_elements_in_audio = unpadded_wav_data_1d.size
+    # As imageio.imwrite requires a multidimensional array, we have to
+    # convert the one-dimensional unpadded_wav_data_1d array to as many
+    # dimensions as there are channels, but some 1D arrays may not fit
+    # exactly in to a multidimensional array without leaving some unfilled
+    # elements at the end.
+    #
+    # So running np.reshape() directly on the 1D array won't always work,
+    # as reshape() requires the source and destination sizes must always
+    # be the same, which they won't be if the source is smaller than the
+    # destination (as some 1D arrays would necessarily have to be in order
+    # to fit in to the required number of dimensions).
+    #
+    # The solution is to first pad the 1D array with NANs to make it fit
+    # exactly in to the required number of dimensions, then reshape.
+    #
+    # Fortunately, the TIFF format has no problem with NANs, and will "do
+    # the right thing" with them. The GIMP image editor also has no problem
+    # reading, editing, and writing TIFFs with NANs.
 
-        # First we figure out the resolution that we need to make
-        # the 2D array:
-        if (x == 'guess') and (y == 'guess'):
-            x, y = ukotoku_guess_image_resolution(number_of_elements_in_wav)
-        elif (type(x) == type(3)) and (type(y) == type(3)):
-            if x * y < unpadded_wav_data_1d.size:
-                ukotoku_exiterr(f"Error: x * y resolution must be at least {unpadded_wav_data_1d.size}")
-            else:
-                pass
+    # First we figure out the resolution that we need to make the
+    # multidimensional array:
+    if (x == 'guess') and (y == 'guess'):
+        x, y = ukotoku_guess_image_resolution(number_of_elements_in_audio, channels)
+    elif (type(x) == type(3)) and (type(y) == type(3)):
+        if x * y * channels < unpadded_wav_data_1d.size:
+            ukotoku_exiterr(f"Error: x * y channels must be at least {unpadded_wav_data_1d.size}")
         else:
-            # This should never happen
-            ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
+            pass
+    else:
+        # This should never happen
+        ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
-        wav_data_2d = ukotoku_wav2tiff_get_wav_data_2d(
-            unpadded_wav_data_1d, x, y, source_shape)
+    wav_data_2d = ukotoku_audio2image_get_wav_data_2d(
+        unpadded_wav_data_1d, x, y, channels, source_shape)
 
-        imageio.imwrite(output_file, wav_data_2d)
+    #wav_data_2d = wav_data_2d.reshape((3, -1)).T
+    #wav_data_2d = wav_data_2d.reshape((3, -1,channels)).T
+    #wav_data_2d = wav_data_2d.reshape((x, -1,channels))
+    #imageio.imwrite(output_file, wav_data_2d, format="PNG-PIL")
+    imageio.imwrite(output_file, wav_data_2d)
 
 
-def ukotoku_wav2tiff_validate_resolution(resolution):
+def ukotoku_audio2image_validate_resolution(resolution):
     # Make sure the user specified a resolution or 'guess'
     try:
         resolution
