@@ -247,7 +247,7 @@ def ukotoku_audio2image_get_multidimensional_wav_data(unpadded_wav_data_1d,
                                       source_shape):
     if x * y == unpadded_wav_data_1d.size:
         # No padding is necessary
-        wav_data_2d = numpy.reshape(unpadded_wav_data_1d, (channels, y,x), order='C')
+        multidimensional_wav_data = numpy.reshape(unpadded_wav_data_1d, (channels, y,x), order='C')
     else:
         # Padding is necessary
 
@@ -263,9 +263,9 @@ def ukotoku_audio2image_get_multidimensional_wav_data(unpadded_wav_data_1d,
                                         constant_values=(numpy.nan,))
 
         # Now that we've padded, we can reshape without fear
-        wav_data_2d = numpy.reshape(padded_wav_data_1d, (y,x,channels), order='C')
+        multidimensional_wav_data = numpy.reshape(padded_wav_data_1d, (y,x,channels), order='C')
 
-    return wav_data_2d
+    return multidimensional_wav_data
 
 
 def ukotoku_audio2image_pad_and_write(output_file,
@@ -310,17 +310,17 @@ def ukotoku_audio2image_pad_and_write(output_file,
         # This should never happen
         ukotoku_exiterr("Error: Unexpected x and y image resolution types.")
 
-    wav_data_2d = ukotoku_audio2image_get_multidimensional_wav_data(
+    multidimensional_wav_data = ukotoku_audio2image_get_multidimensional_wav_data(
         unpadded_wav_data_1d, x, y, channels, source_shape)
 
-    #wav_data_2d = wav_data_2d.reshape((3, -1)).T
-    #wav_data_2d = wav_data_2d.reshape((3, -1,channels)).T
-    #wav_data_2d = wav_data_2d.reshape((x, -1,channels))
-    #imageio.imwrite(output_file, wav_data_2d, format="PNG-PIL")
+    #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1)).T
+    #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1,channels)).T
+    #multidimensional_wav_data = multidimensional_wav_data.reshape((x, -1,channels))
+    #imageio.imwrite(output_file, multidimensional_wav_data, format="PNG-PIL")
     if (output_file_type == 'jpg'):
-        imageio.imwrite(output_file, wav_data_2d, format=None, quality=100)
+        imageio.imwrite(output_file, multidimensional_wav_data, format=None, quality=100)
     else:
-        imageio.imwrite(output_file, wav_data_2d)
+        imageio.imwrite(output_file, multidimensional_wav_data)
 
 
 def ukotoku_audio2image_validate_resolution(resolution):
