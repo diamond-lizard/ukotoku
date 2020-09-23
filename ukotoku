@@ -65,6 +65,7 @@ def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samp
             if (bits == 8) and (signed == False):
                 ukotoku_audio2image(input_file,
                                     output_file,
+                                    output_file_type,
                                     bits,
                                     signed,
                                     resolution,
@@ -75,6 +76,7 @@ def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samp
             if (bits == 8) and (signed == False):
                 ukotoku_audio2image(input_file,
                                     output_file,
+                                    output_file_type,
                                     bits,
                                     signed,
                                     resolution,
@@ -84,6 +86,7 @@ def ukotoku(input_file, output_file, bits, channels, resolution, sampwidth, samp
         elif output_file_type == 'tiff':
             ukotoku_audio2image(input_file,
                                 output_file,
+                                output_file_type,
                                 bits,
                                 signed,
                                 resolution,
@@ -200,7 +203,13 @@ def ukotoku_tiff2wav(input_file, output_file, channels, sampwidth, samprate):
     wav_output_file.writeframesraw(tiff_data)
 
 
-def ukotoku_audio2image(input_file, output_file, bits, signed, resolution, channels):
+def ukotoku_audio2image(input_file,
+                        output_file,
+                        output_file_type,
+                        bits,
+                        signed,
+                        resolution,
+                        channels):
     x, y = ukotoku_get_image_size_from_user(resolution)
 
     raw_wav = ukotoku_get_raw_wav(input_file)
@@ -220,6 +229,7 @@ def ukotoku_audio2image(input_file, output_file, bits, signed, resolution, chann
     if len(source_shape) == 1:
         ukotoku_audio2image_pad_and_write(
             output_file,
+            output_file_type,
             unpadded_wav_data_1d,
             source_shape,
             x,
@@ -259,6 +269,7 @@ def ukotoku_audio2image_get_wav_data_2d(unpadded_wav_data_1d,
 
 
 def ukotoku_audio2image_pad_and_write(output_file,
+                                      output_file_type,
                                       unpadded_wav_data_1d,
                                       source_shape,
                                       x,
@@ -306,7 +317,10 @@ def ukotoku_audio2image_pad_and_write(output_file,
     #wav_data_2d = wav_data_2d.reshape((3, -1,channels)).T
     #wav_data_2d = wav_data_2d.reshape((x, -1,channels))
     #imageio.imwrite(output_file, wav_data_2d, format="PNG-PIL")
-    imageio.imwrite(output_file, wav_data_2d)
+    if (output_file_type == 'jpg'):
+        imageio.imwrite(output_file, wav_data_2d, format=None, quality=100)
+    else:
+        imageio.imwrite(output_file, wav_data_2d)
 
 
 def ukotoku_audio2image_validate_resolution(resolution):
