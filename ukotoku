@@ -47,6 +47,8 @@ from pathlib import Path
 # To check if a file exists with os.path.isfile()
 import os
 
+# For sys.exit
+import sys
 
 @click.command()
 @click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
@@ -95,8 +97,7 @@ def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth,
 
 # Exit after printing an error message to STDERR
 def ukotoku_exiterr(message):
-    ukotoku_printerr(message)
-    exit(1)
+    sys.exit(message)
 
 
 # Expect image resolution in the form WIDTHxHEIGHT or 'guess'
@@ -354,4 +355,7 @@ def ukotoku_get_input_file_type(input_file):
 
 
 if __name__ == '__main__':
-    ukotoku()
+    try:
+        ukotoku()
+    except FileNotFoundError as e:
+        ukotoku_exiterr(e)
