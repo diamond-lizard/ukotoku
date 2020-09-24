@@ -236,7 +236,7 @@ def ukotoku_audio2image_get_multidimensional_wav_data(ctx, unpadded_wav_data_1d)
     x = ctx.obj['x']
     y = ctx.obj['y']
 
-    if x * y == unpadded_wav_data_1d.size:
+    if x * y * channels == unpadded_wav_data_1d.size:
         # No padding is necessary
         multidimensional_wav_data = numpy.reshape(unpadded_wav_data_1d, (channels, y,x), order='C')
     else:
