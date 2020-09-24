@@ -358,9 +358,11 @@ def ukotoku_validate_fit(ctx, size):
     y        = ctx.obj['y']
     channels = ctx.obj['channels']
     if x * y * channels < size:
-        message = f"resolution * channels ({x} * {y} * {channels} = {x * y * channels}) can not fit all {size} input samples"
+        message = f"resolution * channels ({x} * {y} * {channels} = {x * y * channels}) "
+        message = message + f"can not fit all {size} input samples"
         message = message + "\n"
-        message = message + "You can change the output resolution or channels to allow the input samples to fit."
+        message = message + "You can change the output resolution or channels "
+        message = message + "to allow the input samples to fit."
         message = message + "\n"
         message = message + "Suggested settings:"
         message = message + "\n"
