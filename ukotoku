@@ -243,7 +243,7 @@ def ukotoku_audio2image_get_multidimensional_wav_data(ctx, unpadded_wav_data_1d)
 
     if unpadded_wav_data_1d.size == x * y * channels:
         # No padding or truncation is necessary
-        multidimensional_wav_data = numpy.reshape(unpadded_wav_data_1d, (x, y, channels), order='F')
+        multidimensional_wav_data = numpy.reshape(unpadded_wav_data_1d, (y, x, channels), order='F')
     elif unpadded_wav_data_1d.size < x * y * channels:
         # Padding is necessary
 
@@ -259,7 +259,7 @@ def ukotoku_audio2image_get_multidimensional_wav_data(ctx, unpadded_wav_data_1d)
                                         constant_values=(numpy.nan,))
 
         # Now that we've padded, we can reshape without fear
-        multidimensional_wav_data = numpy.reshape(padded_wav_data_1d, (x,y,channels), order='F')
+        multidimensional_wav_data = numpy.reshape(padded_wav_data_1d, (y,x,channels), order='F')
     else:
         # unpadded_wav_data_1d.size > x * y * channels
         if truncate:
@@ -271,7 +271,7 @@ def ukotoku_audio2image_get_multidimensional_wav_data(ctx, unpadded_wav_data_1d)
             # because input data will be truncated to fit (x * y * channels) exactly.
             multidimensional_wav_data = numpy.reshape(
                 unpadded_wav_data_1d[0:x * y * channels],
-                (x, y, channels),
+                (y, x, channels),
                 order='F')
         else:
             ukotoku_exiterr("Unexpected mismatch between input data length and x * y * channels")
