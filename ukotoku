@@ -97,7 +97,8 @@ def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth,
 
 # Exit after printing an error message to STDERR
 def ukotoku_exiterr(message):
-    sys.exit(message)
+    ukotoku_printerr(message)
+    sys.exit(1)
 
 
 # Expect image resolution in the form WIDTHxHEIGHT or 'guess'
