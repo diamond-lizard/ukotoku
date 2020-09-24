@@ -218,7 +218,6 @@ def ukotoku_audio2image(ctx):
     else:
         ukotoku_exiterr(f"Unsupported combination of bits ({bits}) and signed ({signed})")
 
-    print(f"unpadded_wav_data_1d.size = {unpadded_wav_data_1d.size}")
     source_shape = unpadded_wav_data_1d.shape
     if len(source_shape) == 1:
         ctx.obj['x']                = x
@@ -293,7 +292,24 @@ def ukotoku_audio2image_pad_and_write(ctx, unpadded_wav_data_1d):
         ctx.obj['y'] = y
     elif (type(x) == type(3)) and (type(y) == type(3)):
         if x * y * channels < unpadded_wav_data_1d.size:
-            ukotoku_exiterr(f"Error: x * y * channels ({x} * {y} * {channels} = {x * y * channels}) must be at least {unpadded_wav_data_1d.size}")
+            message = f"resolution * channels ({x} * {y} * {channels} = {x * y * channels}) can not fit all {unpadded_wav_data_1d.size} input samples"
+            message = message + "\n"
+            message = message + "You can change the output resolution or channels to allow the input samples to fit."
+            message = message + "\n"
+            message = message + "Suggested settings:"
+            message = message + "\n"
+            x_suggestion = x
+            channels_suggestion = channels
+            y_suggestion = math.ceil(unpadded_wav_data_1d.size / (x * channels))
+            resolution_suggestion = f"{x_suggestion}x{y_suggestion}"
+            message = message + f"--resolution {resolution_suggestion} --channels {channels_suggestion}"
+            message = message + "\n"
+            y_suggestion = y
+            channels_suggestion = channels
+            x_suggestion = math.ceil(unpadded_wav_data_1d.size / (y * channels))
+            resolution_suggestion = f"{x_suggestion}x{y_suggestion}"
+            message = message + f"--resolution {resolution_suggestion} --channels {channels_suggestion}"
+            ukotoku_exiterr(message)
         else:
             pass
     else:
