@@ -217,10 +217,6 @@ def ukotoku_audio2image_pad_and_write(ctx, unpadded_wav_data_1d):
     multidimensional_wav_data = ukotoku_audio2image_get_multidimensional_wav_data(
         unpadded_wav_data_1d)
 
-    #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1)).T
-    #multidimensional_wav_data = multidimensional_wav_data.reshape((3, -1,channels)).T
-    #multidimensional_wav_data = multidimensional_wav_data.reshape((x, -1,channels))
-    #imageio.imwrite(output_file, multidimensional_wav_data, format="PNG-PIL")
     if (ctx.obj['output_file_type'] == 'jpg'):
         imageio.imwrite(ctx.obj['output_file'], multidimensional_wav_data, format=None, quality=100)
     else:
