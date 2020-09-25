@@ -351,8 +351,10 @@ def ukotoku_guess_image_resolution(number_of_elements_in_audio, channels):
 @click.option("--channels",    required=True, type=click.INT, help="Number of channels in output file.")
 @click.option("--sampwidth",   required=True, type=click.INT, help="Sample width for the output file.")
 @click.option("--samprate",    required=True, type=click.INT, help="Sample rate for the output file.")
+@click.option("--clobber/--noclobber", required=False,
+              help="--clobber means overwrite the OUTPUT file if it exists.  Default is --noclobber.")
 @click.pass_context
-def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate):
+def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate, clobber):
     ctx.ensure_object(dict)
     ctx.obj['channels']    = channels
     ctx.obj['input_file']  = input_file
@@ -381,10 +383,14 @@ def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, sampr
         ukotoku_printerr(f"Unexpected OUTPUT file type: {output_file_type}")
         ukotoku_exiterr("Only WAV files are supported as output.")
 
-    # Make sure OUTPUT does not exist
-    output_file_exists = os.path.isfile(output_file)
-    if output_file_exists:
-        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
+    if clobber:
+        pass
+    else:
+        # Make sure OUTPUT does not exist
+        output_file_exists = os.path.isfile(output_file)
+        if output_file_exists:
+            ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
+
     image_data = imageio.imread(input_file)
 
     # Change multidimensional image array to 1D
