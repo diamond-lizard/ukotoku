@@ -50,51 +50,10 @@ import os
 # For sys.exit
 import sys
 
-@click.command()
-@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
-@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
-@click.option("--bits",        required=False, type=click.INT,    help="Output image bit depth.")
-@click.option("--channels",    required=True,  type=click.INT,    help="Number of channels in image or audio file.")
-@click.option("--resolution",  required=False, type=click.STRING, help="x, y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
-@click.option("--sampwidth",   required=False, type=click.INT,    help="Sample width for the audio file.")
-@click.option("--samprate",    required=False, type=click.INT,    help="Sample rate for the audio file.")
-@click.option("--signed/--unsigned",     required=False, help="Output image bits signed or unsigned.")
-@click.option("--truncate/--notruncate", required=False, help="Use only as many input samples as will fit in x * y * channels.")
+@click.group()
 @click.pass_context
-def ukotoku(ctx, input_file, output_file, bits, channels, resolution, sampwidth, samprate, signed, truncate):
+def ukotoku(ctx):
     ctx.ensure_object(dict)
-    ctx.obj['bits']        = bits
-    ctx.obj['channels']    = channels
-    ctx.obj['input_file']  = input_file
-    ctx.obj['output_file'] = output_file
-    ctx.obj['resolution']  = resolution
-    ctx.obj['samprate']    = samprate
-    ctx.obj['sampwidth']   = sampwidth
-    ctx.obj['signed']      = signed
-    ctx.obj['truncate']    = truncate
-    input_file_type = ukotoku_get_input_file_type(input_file)
-    output_file_type = ukotoku_get_output_file_type(output_file)
-    ctx.obj['output_file_type'] = output_file_type
-    if input_file_type == 'wav':
-        if output_file_type == 'jpg':
-            if (bits == 8) and (signed == False):
-                ukotoku_audio2image()
-            else:
-                ukotoku_exiterr("Only unsigned 8 bit is supported for JPEG output.")
-        elif output_file_type == 'png':
-            if (bits == 8) and (signed == False):
-                ukotoku_audio2image()
-            else:
-                ukotoku_exiterr("Only unsigned 8 bit is supported for PNG output.")
-        elif output_file_type == 'tiff':
-            ukotoku_audio2image()
-    elif input_file_type == 'tiff':
-        if output_file_type == 'wav':
-            ukotoku_image2audio()
-        else:
-            ukotoku_exiterr("Only WAV files are supported as output from TIFF files.")
-    else:
-        ukotoku_exiterr("Unexpected INPUT file type.")
 
 
 # Exit after printing an error message to STDERR
@@ -184,10 +143,42 @@ def ukotoku_printerr(message):
     click.echo(message=message, err=True)
 
 
+@ukotoku.command(name='img2audio')
+@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
+@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
+@click.option("--channels",    required=True, type=click.INT, help="Number of channels in output file.")
+@click.option("--sampwidth",   required=True, type=click.INT, help="Sample width for the output file.")
+@click.option("--samprate",    required=True, type=click.INT, help="Sample rate for the output file.")
 @click.pass_context
-def ukotoku_image2audio(ctx):
-    output_file = ctx.obj['output_file']
-    input_file  = ctx.obj['input_file']
+def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate):
+    ctx.ensure_object(dict)
+    ctx.obj['channels']    = channels
+    ctx.obj['input_file']  = input_file
+    ctx.obj['output_file'] = output_file
+    ctx.obj['samprate']    = samprate
+    ctx.obj['sampwidth']   = sampwidth
+
+    input_file_type  = ukotoku_get_input_file_type(input_file)
+    output_file_type = ukotoku_get_output_file_type(output_file)
+
+    ctx.obj['output_file_type'] = output_file_type
+
+    if input_file_type == 'tiff':
+        pass
+    elif input_file_type == 'jpg':
+        pass
+    elif input_file_type == 'png':
+        pass
+    else:
+        ukotoku_printerr(f"Unexpected INPUT file type: {input_file_type}")
+        ukotoku_exiterr(f"Only the following INPUT file types are allowed: JPG, PNG, TIFF")
+
+    if output_file_type == 'wav':
+        pass
+    else:
+        ukotoku_printerr(f"Unexpected OUTPUT file type: {output_file_type}")
+        ukotoku_exiterr("Only WAV files are supported as output.")
+
     # Make sure OUTPUT does not exist
     output_file_exists = os.path.isfile(output_file)
     if output_file_exists:
@@ -197,21 +188,66 @@ def ukotoku_image2audio(ctx):
     # Change multidimensional image array to 1D
     image_data = image_data.reshape(image_data.size,order='F')
 
-    wav_output_file = wave.open(ctx.obj['output_file'], 'w')
-    wav_output_file.setnchannels(ctx.obj['channels'])
-    wav_output_file.setsampwidth(ctx.obj['sampwidth'])
-    wav_output_file.setframerate(ctx.obj['samprate'])
+    wav_output_file = wave.open(output_file, 'w')
+    wav_output_file.setnchannels(channels)
+    wav_output_file.setsampwidth(sampwidth)
+    wav_output_file.setframerate(samprate)
 
     wav_output_file.writeframesraw(image_data)
 
 
+@ukotoku.command(name='audio2img')
+@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
+@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
+@click.option("--bits",        required=True, type=click.INT,
+              help="Output image bit depth.")
+@click.option("--channels",    required=True, type=click.INT,
+              help="Number of channels in the output file.")
+@click.option("--resolution",  required=True, type=click.STRING,
+              help="x, y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
+@click.option("--signed/--unsigned",     required=True,
+              help="Output image values are signed or unsigned.")
+@click.option("--truncate/--notruncate", required=False,
+              help="--trunate means use only as many input samples as will fit in x * y * channels.  Default is --notruncate.")
 @click.pass_context
-def ukotoku_audio2image(ctx):
-    bits   = ctx.obj['bits']
-    signed = ctx.obj['signed']
-    x, y = ukotoku_get_image_size_from_user(ctx.obj['resolution'])
+def ukotoku_audio2image(ctx, input_file, output_file, bits, channels, resolution, signed, truncate):
+    ctx.ensure_object(dict)
+    ctx.obj['bits']        = bits
+    ctx.obj['channels']    = channels
+    ctx.obj['input_file']  = input_file
+    ctx.obj['output_file'] = output_file
+    ctx.obj['resolution']  = resolution
+    ctx.obj['signed']      = signed
+    ctx.obj['truncate']    = truncate
 
-    raw_wav = ukotoku_get_raw_wav(ctx.obj['input_file'])
+    input_file_type  = ukotoku_get_input_file_type(input_file)
+    output_file_type = ukotoku_get_output_file_type(output_file)
+
+    ctx.obj['output_file_type'] = output_file_type
+
+    if input_file_type == 'wav':
+        if output_file_type == 'jpg':
+            if (bits == 8) and (signed == False):
+                pass
+            else:
+                ukotoku_exiterr("Only unsigned 8 bit is supported for JPEG output.")
+        elif output_file_type == 'png':
+            if (bits == 8) and (signed == False):
+                pass
+            else:
+                ukotoku_exiterr("Only unsigned 8 bit is supported for PNG output.")
+        elif output_file_type == 'tiff':
+            pass
+        else:
+            ukotoku_printerr(f"Unexpected OUTPUT file type: {output_file_type}")
+            ukotoku_exiterr(f"Only the following OUTPUT file types are allowed: JPG, PNG, TIFF")
+    else:
+        ukotoku_printerr(f"Unexpected INPUT file type: {input_file_type}")
+        ukotoku_exiterr(f"Only the following INPUT file types are allowed: WAV")
+
+    x, y = ukotoku_get_image_size_from_user(resolution)
+
+    raw_wav = ukotoku_get_raw_wav(input_file)
 
     # Convert raw WAV to a one-dimensional numpy array
     if   (bits ==  8) and (signed == False):

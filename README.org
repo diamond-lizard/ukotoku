@@ -26,15 +26,16 @@ pip3 install --user numpy
 git clone https://github.com/diamond-lizard/ukotoku.git
 #+END_SRC
 ** Use
+** ukotoku can be used in either of two modes
+*** img2audio
 #+BEGIN_SRC sh
-ukotoku OPTIONS INPUT OUTPUT
+ukotoku img2audio OPTIONS INPUT OUTPUT
 #+END_SRC
-*** INPUT
-The name of the file you want to convert from.
-*** OUTPUT
-The name of the file that you want INPUT to be converted to.
-*** Required options for audio output
-**** For the WAV format:
+**** INPUT
+The name of the image file you want to convert from.
+**** OUTPUT
+The name of the audio file that you want INPUT to be converted to.
+**** Required options for audio output
 ***** --channels  INTEGER
 The number of channels the WAV file is to have (ex: "1" for mono, "2" for stereo, etc)
 ***** --sampwidth INTEGER
@@ -43,26 +44,37 @@ The sample width the WAV file is to have (ex: "2")
 ****** NOTE: You should use a sample width of at least 2 (16-bit) if you wish to ensure that all the data in the TIFF is preserved in the WAV.
 ***** --samprate  INTEGER
 The sample rate the WAV file is to have (ex: "44100")
-*** Required options for image output
-**** --resolution WIDTH,HEIGHT or 'guess'
-***** x and y image dimensions
-***** If you choose 'guess', then ukotoku will try to set the image size to a square equal to or slightly larget than the data will fit in to.
-**** --bits
-***** Bit depth.
+*** audio2img
+#+BEGIN_SRC sh
+ukotoku audio2img OPTIONS INPUT OUTPUT
+#+END_SRC
+**** INPUT
+The name of the audio file you want to convert from.
+**** OUTPUT
+The name of the image file that you want INPUT to be converted to.
+**** Required options for image output
+***** --resolution WIDTH,HEIGHT or 'guess'
+****** x and y image dimensions
+****** If you choose 'guess', then ukotoku will try to set the image size to a square equal to or slightly larget than the data will fit in to.
+***** --bits
+****** Bit depth.
 Currently 8 bits is the only supported format for JPEG and PNG output.  8 or 16 bits are supported for TIFF.
-**** --signed or --unsigned
-***** Unsigned bits are all positive, while signed bits can be positive or negative.
+***** --signed or --unsigned
+****** Unsigned bits are all positive, while signed bits can be positive or negative.
 Currently unsigned is the only supported format for JPEG and PNG output.  8 or 16 bits are supported for TIFF.
+**** Optional options for image output
+***** --truncate or --notruncate
+****** --truncate means that if INPUT contains more samples than there are in (x * y * channels) then extra samples from INPUT will be discarded.
 ** Examples
 *** Convert from a TIFF file to a WAV file
 *Note: The resulting WAV file will be in mono, 16-bit bit depth, and 22050 sample rate.*
 #+BEGIN_SRC sh
-ukotoku --channels 1 --sampwidth 2 --samprate 22050 INPUT.tiff OUTPUT.wav
+ukotoku audio2img --channels 1 --sampwidth 2 --samprate 22050 INPUT.tiff OUTPUT.wav
 #+END_SRC
 *** Convert from a WAV file to a TIFF file
 *Note: The resulting TIFF file will be 163 pixels wide by 163 pixels high.*
 #+BEGIN_SRC sh
-ukotoku --resolution 163x163 INPUT.tiff OUTPUT.wav
+ukotoku img2audio --resolution 163x163 INPUT.tiff OUTPUT.wav
 #+END_SRC
 ** FAQ
 *** I converted from an image to an audio file and back (or vice versa) but the result isn't exactly like the original.
