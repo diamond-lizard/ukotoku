@@ -38,10 +38,8 @@ The name of the audio file that you want INPUT to be converted to.
 **** Required options for audio output
 ***** --channels  INTEGER
 The number of channels the WAV file is to have (ex: "1" for mono, "2" for stereo, etc)
-***** --sampwidth INTEGER
-The sample width the WAV file is to have (ex: "2")
-****** NOTE: You should use a sample width of "1" for 8-bit WAVs, "2" for 16-bit WAVs, etc
-****** NOTE: You should use a sample width of at least 2 (16-bit) if you wish to ensure that all the data in the TIFF is preserved in the WAV.
+***** --bits INTEGER
+The sample width (in bits) the WAV file is to have.  Valid values are 8 or 16.
 ***** --samprate  INTEGER
 The sample rate the WAV file is to have (ex: "44100")
 *** audio2img
