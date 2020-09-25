@@ -359,18 +359,18 @@ def ukotoku_guess_image_resolution(number_of_elements_in_audio, channels):
 @click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
 @click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
 @click.option("--channels",    required=True, type=click.INT, help="Number of channels in output file.")
-@click.option("--sampwidth",   required=True, type=click.INT, help="Sample width for the output file.")
+@click.option("--bits",        required=True, type=click.INT, help="Sample width (in bits) for the output file.  (Valid values: 8 or 16)")
 @click.option("--samprate",    required=True, type=click.INT, help="Sample rate for the output file.")
 @click.option("--clobber/--noclobber", required=False,
               help="--clobber means overwrite the OUTPUT file if it exists.  Default is --noclobber.")
 @click.pass_context
-def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate, clobber):
+def ukotoku_image2audio(ctx, input_file, output_file, channels, bits, samprate, clobber):
     ctx.ensure_object(dict)
     ctx.obj['channels']    = channels
     ctx.obj['input_file']  = input_file
     ctx.obj['output_file'] = output_file
     ctx.obj['samprate']    = samprate
-    ctx.obj['sampwidth']   = sampwidth
+    ctx.obj['bits']        = bits
 
     input_file_type  = ukotoku_get_input_file_type(input_file)
     output_file_type = ukotoku_get_output_file_type(output_file)
@@ -408,8 +408,16 @@ def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, sampr
 
     wav_output_file = wave.open(output_file, 'w')
     wav_output_file.setnchannels(channels)
-    wav_output_file.setsampwidth(sampwidth)
     wav_output_file.setframerate(samprate)
+
+    if bits == 8:
+        sampwidth = 1
+    elif bits == 16:
+        sampwidth = 2
+    else:
+        exiterr(f"Invalid number of bits ({bits}) specified.  Only 8 or 16 bits allowed.")
+
+    wav_output_file.setsampwidth(sampwidth)
 
     wav_output_file.writeframesraw(image_data)
 
