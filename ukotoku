@@ -56,146 +56,6 @@ def ukotoku(ctx):
     ctx.ensure_object(dict)
 
 
-# Exit after printing an error message to STDERR
-def ukotoku_exiterr(message):
-    ukotoku_printerr(message)
-    sys.exit(1)
-
-
-# Expect image resolution in the form WIDTHxHEIGHT or 'guess'
-def ukotoku_get_image_size_from_user(resolution):
-    ukotoku_audio2image_validate_resolution(resolution)
-
-    if resolution == 'guess':
-        x = 'guess'
-        y = 'guess'
-    else:
-        match = re.search('^(\d+)x(\d+)$', resolution)
-        if match:
-            x = int(match.group(1))
-            y = int(match.group(2))
-        else:
-            ukotoku_exiterr("resolution must be in the form WIDTHxHEIGHT or 'guess'")
-    return (x, y)
-
-
-def ukotoku_get_output_file_type(output_file):
-    # Make sure the output file type is allowed
-    match = re.search('\.([^.]+)$', output_file)
-    if match:
-        output_file_extension = match.group(1)
-    else:
-        ukotoku_exiterr("The OUTPUT filename must have an extension, such as .wav or .tiff")
-
-    valid_audio_extensions = [
-        'wav',
-        ]
-
-    valid_image_extensions = [
-        'jpg',
-        'png',
-        'tiff',
-        ]
-
-    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
-        return output_file_extension.lower()
-    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
-        return output_file_extension.lower()
-    else:
-        valid_audio_extensions = ', '.join(valid_audio_extensions)
-        valid_image_extensions = ', '.join(valid_image_extensions)
-        message = "OUTPUT file extension must be one of: "
-        message = message + valid_audio_extensions + valid_image_extensions
-        ukotoku_exiterr(message)
-
-
-
-def ukotoku_get_raw_wav(input_file):
-    # Read file to get buffer
-    ifile   = wave.open(input_file)
-    samples = ifile.getnframes()
-    raw_wav = ifile.readframes(samples)
-    return raw_wav
-
-
-# Decide on image resolution.
-#
-# We could choose anything, but have decided on a square
-# that should fit at least as many elements as are contained in the
-# one-dimensional WAV array
-def ukotoku_guess_image_resolution(number_of_elements_in_audio, channels):
-    try:
-        elements_remaining = number_of_elements_in_audio / channels
-    except ZeroDivisionError:
-        ukotoku_exiterr("You must have at least one channel.")
-    else:
-        # We do the following to make the minimum sized square that will
-        # fit the data:
-        x = math.ceil(math.sqrt(elements_remaining))
-        y = x
-        return (x,y)
-
-
-# Print an error message to STDERR
-def ukotoku_printerr(message):
-    this_script = Path(__file__)
-    message = f'{this_script}: Error: {message}'
-    click.echo(message=message, err=True)
-
-
-@ukotoku.command(name='img2audio')
-@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
-@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
-@click.option("--channels",    required=True, type=click.INT, help="Number of channels in output file.")
-@click.option("--sampwidth",   required=True, type=click.INT, help="Sample width for the output file.")
-@click.option("--samprate",    required=True, type=click.INT, help="Sample rate for the output file.")
-@click.pass_context
-def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate):
-    ctx.ensure_object(dict)
-    ctx.obj['channels']    = channels
-    ctx.obj['input_file']  = input_file
-    ctx.obj['output_file'] = output_file
-    ctx.obj['samprate']    = samprate
-    ctx.obj['sampwidth']   = sampwidth
-
-    input_file_type  = ukotoku_get_input_file_type(input_file)
-    output_file_type = ukotoku_get_output_file_type(output_file)
-
-    ctx.obj['output_file_type'] = output_file_type
-
-    if input_file_type == 'tiff':
-        pass
-    elif input_file_type == 'jpg':
-        pass
-    elif input_file_type == 'png':
-        pass
-    else:
-        ukotoku_printerr(f"Unexpected INPUT file type: {input_file_type}")
-        ukotoku_exiterr(f"Only the following INPUT file types are allowed: JPG, PNG, TIFF")
-
-    if output_file_type == 'wav':
-        pass
-    else:
-        ukotoku_printerr(f"Unexpected OUTPUT file type: {output_file_type}")
-        ukotoku_exiterr("Only WAV files are supported as output.")
-
-    # Make sure OUTPUT does not exist
-    output_file_exists = os.path.isfile(output_file)
-    if output_file_exists:
-        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
-    image_data = imageio.imread(input_file)
-
-    # Change multidimensional image array to 1D
-    image_data = image_data.reshape(image_data.size,order='F')
-
-    wav_output_file = wave.open(output_file, 'w')
-    wav_output_file.setnchannels(channels)
-    wav_output_file.setsampwidth(sampwidth)
-    wav_output_file.setframerate(samprate)
-
-    wav_output_file.writeframesraw(image_data)
-
-
 @ukotoku.command(name='audio2img')
 @click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
 @click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
@@ -378,6 +238,29 @@ def ukotoku_audio2image_validate_resolution(resolution):
         ukotoku_exiterr("You must specify a resolution or 'guess'")
 
 
+# Exit after printing an error message to STDERR
+def ukotoku_exiterr(message):
+    ukotoku_printerr(message)
+    sys.exit(1)
+
+
+# Expect image resolution in the form WIDTHxHEIGHT or 'guess'
+def ukotoku_get_image_size_from_user(resolution):
+    ukotoku_audio2image_validate_resolution(resolution)
+
+    if resolution == 'guess':
+        x = 'guess'
+        y = 'guess'
+    else:
+        match = re.search('^(\d+)x(\d+)$', resolution)
+        if match:
+            x = int(match.group(1))
+            y = int(match.group(2))
+        else:
+            ukotoku_exiterr("resolution must be in the form WIDTHxHEIGHT or 'guess'")
+    return (x, y)
+
+
 def ukotoku_get_input_file_type(input_file):
     # Make sure the input file type is allowed
     match = re.search('\.([^.]+)$', input_file)
@@ -407,6 +290,123 @@ def ukotoku_get_input_file_type(input_file):
         message = "INPUT file extension must be one of: "
         message = message + valid_audio_extensions + valid_image_extensions
         ukotoku_exiterr(message)
+
+
+def ukotoku_get_output_file_type(output_file):
+    # Make sure the output file type is allowed
+    match = re.search('\.([^.]+)$', output_file)
+    if match:
+        output_file_extension = match.group(1)
+    else:
+        ukotoku_exiterr("The OUTPUT filename must have an extension, such as .wav or .tiff")
+
+    valid_audio_extensions = [
+        'wav',
+        ]
+
+    valid_image_extensions = [
+        'jpg',
+        'png',
+        'tiff',
+        ]
+
+    if   output_file_extension.casefold() in (f.casefold() for f in valid_audio_extensions):
+        return output_file_extension.lower()
+    elif output_file_extension.casefold() in (f.casefold() for f in valid_image_extensions):
+        return output_file_extension.lower()
+    else:
+        valid_audio_extensions = ', '.join(valid_audio_extensions)
+        valid_image_extensions = ', '.join(valid_image_extensions)
+        message = "OUTPUT file extension must be one of: "
+        message = message + valid_audio_extensions + valid_image_extensions
+        ukotoku_exiterr(message)
+
+
+
+def ukotoku_get_raw_wav(input_file):
+    # Read file to get buffer
+    ifile   = wave.open(input_file)
+    samples = ifile.getnframes()
+    raw_wav = ifile.readframes(samples)
+    return raw_wav
+
+
+# Decide on image resolution.
+#
+# We could choose anything, but have decided on a square
+# that should fit at least as many elements as are contained in the
+# one-dimensional WAV array
+def ukotoku_guess_image_resolution(number_of_elements_in_audio, channels):
+    try:
+        elements_remaining = number_of_elements_in_audio / channels
+    except ZeroDivisionError:
+        ukotoku_exiterr("You must have at least one channel.")
+    else:
+        # We do the following to make the minimum sized square that will
+        # fit the data:
+        x = math.ceil(math.sqrt(elements_remaining))
+        y = x
+        return (x,y)
+
+
+@ukotoku.command(name='img2audio')
+@click.argument('input_file',  nargs=1, required=True, metavar='INPUT')
+@click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
+@click.option("--channels",    required=True, type=click.INT, help="Number of channels in output file.")
+@click.option("--sampwidth",   required=True, type=click.INT, help="Sample width for the output file.")
+@click.option("--samprate",    required=True, type=click.INT, help="Sample rate for the output file.")
+@click.pass_context
+def ukotoku_image2audio(ctx, input_file, output_file, channels, sampwidth, samprate):
+    ctx.ensure_object(dict)
+    ctx.obj['channels']    = channels
+    ctx.obj['input_file']  = input_file
+    ctx.obj['output_file'] = output_file
+    ctx.obj['samprate']    = samprate
+    ctx.obj['sampwidth']   = sampwidth
+
+    input_file_type  = ukotoku_get_input_file_type(input_file)
+    output_file_type = ukotoku_get_output_file_type(output_file)
+
+    ctx.obj['output_file_type'] = output_file_type
+
+    if input_file_type == 'tiff':
+        pass
+    elif input_file_type == 'jpg':
+        pass
+    elif input_file_type == 'png':
+        pass
+    else:
+        ukotoku_printerr(f"Unexpected INPUT file type: {input_file_type}")
+        ukotoku_exiterr(f"Only the following INPUT file types are allowed: JPG, PNG, TIFF")
+
+    if output_file_type == 'wav':
+        pass
+    else:
+        ukotoku_printerr(f"Unexpected OUTPUT file type: {output_file_type}")
+        ukotoku_exiterr("Only WAV files are supported as output.")
+
+    # Make sure OUTPUT does not exist
+    output_file_exists = os.path.isfile(output_file)
+    if output_file_exists:
+        ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
+    image_data = imageio.imread(input_file)
+
+    # Change multidimensional image array to 1D
+    image_data = image_data.reshape(image_data.size,order='F')
+
+    wav_output_file = wave.open(output_file, 'w')
+    wav_output_file.setnchannels(channels)
+    wav_output_file.setsampwidth(sampwidth)
+    wav_output_file.setframerate(samprate)
+
+    wav_output_file.writeframesraw(image_data)
+
+
+# Print an error message to STDERR
+def ukotoku_printerr(message):
+    this_script = Path(__file__)
+    message = f'{this_script}: Error: {message}'
+    click.echo(message=message, err=True)
 
 
 @click.pass_context
