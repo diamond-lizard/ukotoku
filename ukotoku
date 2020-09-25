@@ -69,8 +69,10 @@ def ukotoku(ctx):
               help="Output image values are signed or unsigned.")
 @click.option("--truncate/--notruncate", required=False,
               help="--trunate means use only as many input samples as will fit in x * y * channels.  Default is --notruncate.")
+@click.option("--clobber/--noclobber", required=False,
+              help="--clobber means overwrite the OUTPUT file if it exists.  Default is --noclobber.")
 @click.pass_context
-def ukotoku_audio2image(ctx, input_file, output_file, bits, channels, resolution, signed, truncate):
+def ukotoku_audio2image(ctx, input_file, output_file, bits, channels, resolution, signed, truncate, clobber):
     ctx.ensure_object(dict)
     ctx.obj['bits']        = bits
     ctx.obj['channels']    = channels
@@ -104,6 +106,14 @@ def ukotoku_audio2image(ctx, input_file, output_file, bits, channels, resolution
     else:
         ukotoku_printerr(f"Unexpected INPUT file type: {input_file_type}")
         ukotoku_exiterr(f"Only the following INPUT file types are allowed: WAV")
+
+    if clobber:
+        pass
+    else:
+        # Make sure OUTPUT does not exist
+        output_file_exists = os.path.isfile(output_file)
+        if output_file_exists:
+            ukotoku_exiterr(f"OUTPUT file '{output_file}' already exists.")
 
     x, y = ukotoku_get_image_size_from_user(resolution)
 
