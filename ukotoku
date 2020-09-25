@@ -61,8 +61,8 @@ def ukotoku(ctx):
 @click.argument('output_file', nargs=1, required=True, metavar='OUTPUT')
 @click.option("--bits",        required=True, type=click.INT,
               help="Output image bit depth.")
-@click.option("--channels",    required=True, type=click.INT,
-              help="Number of channels in the output file.")
+@click.option("--mode",    required=True, type=click.INT,
+              help="Number of channels in the output file. (1 for grayscale, 3 for RGB, 4 for RGBA)")
 @click.option("--resolution",  required=True, type=click.STRING,
               help="x, y image resolution", metavar="WIDTHxHEIGHT or 'guess'")
 @click.option("--signed/--unsigned",     required=True,
