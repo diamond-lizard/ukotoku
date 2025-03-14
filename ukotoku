@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/env python3.12
 #
 # Convert files from audio formats to image formats and back.
 #
