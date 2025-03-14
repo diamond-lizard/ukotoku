@@ -258,7 +258,7 @@ def ukotoku_get_image_size_from_user(resolution):
         x = 'guess'
         y = 'guess'
     else:
-        match = re.search('^(\d+)x(\d+)$', resolution)
+        match = re.search(r'^(\d+)x(\d+)$', resolution)
         if match:
             x = int(match.group(1))
             y = int(match.group(2))
@@ -269,7 +269,7 @@ def ukotoku_get_image_size_from_user(resolution):
 
 def ukotoku_get_input_file_type(input_file):
     # Make sure the input file type is allowed
-    match = re.search('\.([^.]+)$', input_file)
+    match = re.search(r'\.([^.]+)$', input_file)
     if match:
         input_file_extension = match.group(1)
     else:
@@ -300,7 +300,7 @@ def ukotoku_get_input_file_type(input_file):
 
 def ukotoku_get_output_file_type(output_file):
     # Make sure the output file type is allowed
-    match = re.search('\.([^.]+)$', output_file)
+    match = re.search(r'\.([^.]+)$', output_file)
     if match:
         output_file_extension = match.group(1)
     else:
