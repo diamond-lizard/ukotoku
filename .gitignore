@@ -6,3 +6,5 @@
 !test/input.tiff
 !test/input.wav
 .*~*~
+.aider*
+.env
